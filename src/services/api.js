@@ -1,20 +1,4 @@
-/*import axios from "axios";
-
-
-export const getPhotos = async () => {
-    const { data } = await axios.get("search/photos");
-    return data
-}*/
-
-
-
-
-
-
-
-
-
-/*import axios from "axios";
+import axios from "axios";
 
 const API_KEY = 'i9wbXvFd-cu6QxKyhooRASCj8VWy50rtQG-9BbauSY4';
 
@@ -32,3 +16,5 @@ export const getPhotos = async (query, page = 1, per_page = 20) => {
 
   return data;
 };
+
+

@@ -1,106 +1,110 @@
-import { useEffect, useState } from "react";
-import { Toaster } from "react-hot-toast";
-
+import React, { useState, useEffect, useRef } from "react";
+import "./app.css";
 import SearchBar from "./components/SearchBar/SearchBar";
-import ImageGallery from "./components/ImageGallery/ImageGallery";
 import Loader from "./components/Loader/Loader";
 import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
+import ImageGallery from "./components/ImageGallery/ImageGallery";
+import { getPhotos } from "./services/api";
 import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
-import ImageModal from "./components/ImageModal/ImageModal";
+import { ImageModal } from "./components/ImageModal/ImageModal";
+import ScrollUp from "./components/ScrollUp/ScrollUp";
+import ScrollIntoView from 'react-scroll-into-view'
+import axios from 'axios';
 
-import { requestImages } from "./services/api";
-
-function App() {
-  const [images, setImages] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [query, setQuery] = useState("");
-  const [isError, setIsError] = useState(false);
+const App = () => {
+  const [photos, setPhotos] = useState(null);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
-  // const [selectedImage, setSelectedImage] = useState(null);
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [modalImg, setModalImg] = useState(null);
-  const [openCloseModal, setOpenCloseModal] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [scrollBtn, setScrollBtn] = useState(false);
+  // const lastImageRef = useRef(null);
 
   useEffect(() => {
-    if (!query.length) return;
-
-    const fetchImages = async () => {
-      try {
-        setIsLoading(true);
-        if (page === 1) setImages(null);
-        const data = await requestImages(query, page);
-        setImages((prevImages) =>
-          prevImages !== null ? [...prevImages, ...data] : [...data]
-        );
-      } catch (error) {
-        setIsError(true);
-      } finally {
-        setIsLoading(false);
+    const handleScroll = () => {
+      if (window.innerWidth > 900) {
+        const isScrollBtnVisible = window.scrollY > 200;
+        setScrollBtn(isScrollBtnVisible);
       }
     };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
-    fetchImages();
+  useEffect(() => {
+    if (!query) return;
+    async function handleSearch() {
+      try {
+        setLoading(true);
+        setError(false);
+        const data = await getPhotos(query, page);
+        setPhotos(prevPhotos => {
+          if (Array.isArray(prevPhotos)) {
+            return [...prevPhotos, ...data.results];
+          } else {
+            return [...data.results];
+          }
+        });
+        setTotalPages(data.total_pages);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    handleSearch();
+    // scrollToLastImage();
   }, [query, page]);
 
-  const onSetSearchQuery = (searchQuery) => {
-    setQuery(searchQuery);
-    setPage(1);
+  const handleQuery = (newQuery) => {
+    if (newQuery !== query) {
+      setQuery(newQuery);
+      setPhotos(null);
+      setPage(1);
+      setTotalPages(0);
+    }
   };
 
-  const onAddPage = () => {
-    setPage(page + 1);
-  };
-  const openModal = (img) => {
-    setModalImg(img);
-    setOpenCloseModal(true);
-  };
-  const closeModal = () => setOpenCloseModal(false);
-  // const openModal = (image) => {
-  //   setSelectedImage(image);
-  //   setIsModalOpen(true);
+  // const scrollToLastImage = () => {
+  //   if (lastImageRef.current) {
+  //     lastImageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //   }
   // };
 
-  // const closeModal = () => {
-  //   setSelectedImage(null);
-  //   setIsModalOpen(false);
-  // };
+  const loadMorePhotos = () => {
+    setPage(prevPage => prevPage + 1);
+    // setScrollBtn(true);
+  };
+
+  const openModal = photo => {
+    setSelectedPhoto(photo);
+  };
+
+  const closeModal = () => {
+    setSelectedPhoto(null);
+  };
+
+  const onScrollBtn = () => {
+    setScrollBtn(false)
+  };
 
   return (
-    <>
-      <Toaster
-        containerStyle={{
-          top: 50,
-        }}
-        toastOptions={{
-          duration: 2500,
-          position: "top-center",
-          reverseOrder: false,
-          style: {
-            background: "red",
-            color: "#fff",
-          },
-        }}
-        position="top-center"
-        reverseOrder={false}
-      />
-      <SearchBar onSubmit={onSetSearchQuery} isError={isError} />
-      {Array.isArray(images) && (
-        <ImageGallery images={images} openModal={openModal} />
+    <div>
+      <SearchBar onSubmit={handleQuery} />
+      {loading && <Loader />}
+      {error && <ErrorMessage />}
+      {photos !== null && (
+        <ImageGallery photos={photos} handleImageClick={openModal} /*lastImageRef={lastImageRef}*/ />
       )}
-      {isError && <ErrorMessage />}
-      {isLoading && <Loader />}
-      {images && images.length !== 0 && <LoadMoreBtn onAddPage={onAddPage} />}
-      <ImageModal
-        modalImg={modalImg}
-        isOpen={openCloseModal}
-        onCloseModal={closeModal}
-        // isOpen={modalImg}
-        // onRequestClose={closeModal}
-        // selectedImage={selectedImage}
-      />
-    </>
+      {totalPages > page && <LoadMoreBtn loadMorePhotos={loadMorePhotos} />}
+      <ImageModal isOpen={!!selectedPhoto} photo={selectedPhoto} onRequestClose={closeModal} />
+      {scrollBtn && <ScrollIntoView selector="#header"><ScrollUp onScrollBtn={onScrollBtn} /></ScrollIntoView>}
+    </div>
   );
-}
+};
 
 export default App;

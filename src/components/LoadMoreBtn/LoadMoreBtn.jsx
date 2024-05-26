@@ -1,12 +1,10 @@
 import React from 'react';
+import css from "./LoadMoreBtn.module.css"
 
-
-const LoadMoreBtn = ({ onAddPage }) => {
+const LoadMoreBtn = ({ loadMorePhotos }) => {
   return (
-    <>
-      <button onClick={onAddPage}>Load more</button>
-    </>
-  );
-};
+    <button type="button" className={css.loadMoreBtn}  onClick={loadMorePhotos}>Load more</button>
+  )
+}
 
-export default LoadMoreBtn;
+export default LoadMoreBtn

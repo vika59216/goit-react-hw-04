@@ -1,40 +1,41 @@
-import React from "react";
-
+import React from 'react';
+import Modal from 'react-modal';
 import css from './ImageModal.module.css';
-
-/*import Modal from "react-modal";*/
 
 const customStyles = {
   content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
+    padding: '0',
+    background: 'unset',
+    overflow: 'unset',
+    border: 'none',
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
   },
 };
 
-const ImageModal = ({ modalImg, isOpen, onCloseModal }) => {
+export const ImageModal = ({ isOpen, photo, onRequestClose }) => {
+  if (!photo) {
+    return null;
+  }
+
   return (
-    <div>
-      <Modal
-        style={customStyles}
-        isOpen={isOpen}
-        onRequestClose={onCloseModal}
-        ariaHideApp={false}
-      >
-        {modalImg && (
-          <img
-            src={modalImg.imgUrl}
-            alt="Selected Image"
-            width={800}
-            height={600}
-          />
-        )}
-      </Modal>
-    </div>
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={onRequestClose}
+      overlayClassName={css.overlay}
+      style={customStyles}
+    >
+      <button className={css.closeButton} onClick={onRequestClose}>x</button>
+        <img
+          src={photo.urls.regular}
+          alt={photo.alt_description}
+          className={css.imageModal}
+        />
+
+    </Modal>
   );
 };
-
-export default ImageModal;

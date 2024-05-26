@@ -1,22 +1,21 @@
 
+import React from "react";
 import ImageCard from "../ImageCard/ImageCard";
 import css from "./ImageGallery.module.css";
-const ImageGallery = ({ images, openModal }) => {
+
+const ImageGallery = ({ photos, handleImageClick,  }) => {
   return (
-    <>
-      <ul className={css.list}>
-        {Array.isArray(images) &&
-          images.map(({ id, alt_description, user, urls }) => (
-            <ImageCard
-              key={id}
-              urls={urls}
-              alt_description={alt_description}
-              user={user}
-              openModal={openModal}
-            />
-          ))}
-      </ul>
-    </>
+    <ul>
+      {Array.isArray(photos) &&
+      photos.map((photo, index) => {
+        const isLastImage = index === photos.length - 1;
+        return (
+          <li key={photo.id} /*ref={isLastImage ? lastImageRef : null}*/>
+            <ImageCard photo={photo} onClick={() => handleImageClick(photo)}/>
+          </li>
+        );
+      })}
+    </ul>
   );
 };
 
